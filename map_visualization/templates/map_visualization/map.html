@@ -12,7 +12,18 @@
     <style>
         #map {
             height: 500px;
-            width: 100%;
+            width: 75%;
+            float: left;
+        }
+        #sidebar {
+            width: 23%;
+            float: right;
+            padding: 10px;
+            box-sizing: border-box;
+            border-left: 1px solid #ddd;
+        }
+        .crime-data {
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -33,12 +44,28 @@
         <button type="submit">View District</button>
     </form>
 
-    <!-- Display the map for the selected district -->
-    {% if lat and lon %}
-        <h2>Map for: {{ selected_district }}</h2>
-        <div id="map"></div>
+    <div id="map"></div>
+    <div id="sidebar">
+        {% if selected_district %}
+            <h3>Crime Data for {{ selected_district }}</h3>
+            {% if crime_data %}
+                <div class="crime-data"><strong>Rape Cases:</strong> {{ crime_data.rape }}</div>
+                <div class="crime-data"><strong>Kidnapping and Abduction:</strong> {{ crime_data.kidnapping_and_abduction }}</div>
+                <div class="crime-data"><strong>Dowry Deaths:</strong> {{ crime_data.dowry_deaths }}</div>
+                <div class="crime-data"><strong>Assault on Women:</strong> {{ crime_data.assault_on_women }}</div>
+                <div class="crime-data"><strong>Insult to Modesty:</strong> {{ crime_data.insult_to_modesty }}</div>
+                <div class="crime-data"><strong>Cruelty by Husband:</strong> {{ crime_data.cruelty_by_husband }}</div>
+                <div class="crime-data"><strong>Importation of Girls:</strong> {{ crime_data.importation_of_girls }}</div>
+            {% else %}
+                <p>No crime data available for this district.</p>
+            {% endif %}
+        {% else %}
+            <p>Select a district to view crime data.</p>
+        {% endif %}
+    </div>
 
-        <script>
+    <script>
+        {% if lat and lon %}
             var map = L.map('map').setView([{{ lat }}, {{ lon }}], 10);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: 'Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -47,9 +74,7 @@
             L.marker([{{ lat }}, {{ lon }}]).addTo(map)
                 .bindPopup('<b>{{ selected_district }}</b><br>Crime Data for this district.')
                 .openPopup();
-        </script>
-    {% else %}
-        <p>No district selected or no latitude/longitude available.</p>
-    {% endif %}
+        {% endif %}
+    </script>
 </body>
 </html>

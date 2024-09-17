@@ -41,6 +41,17 @@ def crime_map_view(request):
             lat, lon = fetch_lat_long(location)
             context['lat'] = lat
             context['lon'] = lon
+            
+            # Add crime data for the selected district to the context
+            context['crime_data'] = {
+                'rape': district_data.get('rape', 0),
+                'kidnapping_and_abduction': district_data.get('kidnapping_and_abduction', 0),
+                'dowry_deaths': district_data.get('dowry_deaths', 0),
+                'assault_on_women': district_data.get('assault_on_women', 0),
+                'insult_to_modesty': district_data.get('insult_to_modesty', 0),
+                'cruelty_by_husband': district_data.get('cruelty_by_husband', 0),
+                'importation_of_girls': district_data.get('importation_of_girls', 0),
+            }
 
     return render(request, 'map_visualization/map.html', context)
 

@@ -21,6 +21,9 @@ from map_visualization import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('map/', views.crime_map_view, name='crime_map'),
+    path('map/', views.crime_map_view, name='crime_map')
+
+
+
 
 ]
