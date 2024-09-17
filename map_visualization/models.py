@@ -1,4 +1,3 @@
-# models.py in map_visualization app
 from django.db import models
 
 class CrimeData(models.Model):
@@ -17,3 +16,8 @@ class CrimeData(models.Model):
 
     def __str__(self):
         return f"{self.district}, {self.state_ut}"
+
+    def is_safe(self):
+        # Define a threshold for safety, e.g., below 10 rape cases considered safe
+        threshold = 10
+        return self.rape <= threshold

@@ -2,13 +2,10 @@
 <html>
 <head>
     <title>Crime Map Visualization</title>
-
     <!-- Include Leaflet.js CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    
     <!-- Include Leaflet.js JavaScript -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-
     <style>
         #map {
             height: 500px;
@@ -25,11 +22,16 @@
         .crime-data {
             margin-bottom: 10px;
         }
+        .custom-icon div {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
     </style>
 </head>
 <body>
     <h1>Crime Map Visualization</h1>
-
     <!-- Form to select a district -->
     <form method="GET" action="{% url 'crime_map' %}">
         <label for="district">Select District:</label>
@@ -71,9 +73,16 @@
                 attribution: 'Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            L.marker([{{ lat }}, {{ lon }}]).addTo(map)
-                .bindPopup('<b>{{ selected_district }}</b><br>Crime Data for this district.')
-                .openPopup();
+            var markerColor = '{{ is_safe|yesno:"green,red" }}';  // Green if safe, Red if unsafe
+
+            L.marker([{{ lat }}, {{ lon }}], {
+                icon: L.divIcon({
+                    className: 'custom-icon',
+                    html: '<div style="background-color:' + markerColor + ';"></div>'
+                })
+            }).addTo(map)
+            .bindPopup('<b>{{ selected_district }}</b><br>Crime Data for this district.')
+            .openPopup();
         {% endif %}
     </script>
 </body>

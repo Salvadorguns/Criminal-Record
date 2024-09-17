@@ -1,70 +1,63 @@
-import requests
 from django.shortcuts import render
+import requests
 
-# Replace with your API URL
+# Replace with your actual API URL
 API_URL = 'https://api.data.gov.in/resource/6732c416-5de6-4a14-9e9d-7366316436a3?api-key=579b464db66ec23bdd000001104f22e5aaa7405b7f9e699179320eb5&format=json&limit=1000'
 
 def crime_map_view(request):
     try:
-        # Fetch data from the API
         response = requests.get(API_URL)
-        response.raise_for_status()  # Ensure we raise an error for bad responses
+        response.raise_for_status()
         data = response.json()
-
-        # Extract districts from the response
         records = data.get('records', [])
         districts = list(set(record['district'] for record in records if 'district' in record))
-
-        # Sort the district names
         districts.sort()
-
     except requests.RequestException as e:
         print(f"Error fetching districts from API: {e}")
-        districts = []  # Fallback if the API fails
+        districts = []
 
-    # Get the selected district from the query parameters
     selected_district = request.GET.get('district', None)
-
-    context = {
-        'districts': districts,
-        'selected_district': selected_district,
-    }
+    context = {'districts': districts, 'selected_district': selected_district}
 
     if selected_district:
-        # Filter to get the data for the selected district
         district_data = next((record for record in records if record['district'] == selected_district), None)
-
-        # Fetch latitude and longitude for the selected district (if available)
         if district_data:
-            # Use the `district` and `state_ut` fields to get lat/long from a geocoding API
             location = f"{district_data['district']}, {district_data['state_ut']}"
             lat, lon = fetch_lat_long(location)
             context['lat'] = lat
             context['lon'] = lon
-            
-            # Add crime data for the selected district to the context
+
+            # Convert string values to integers, default to 0 if conversion fails
+            try:
+                rape_cases = int(district_data.get('rape', 0))
+            except ValueError:
+                rape_cases = 0
+
             context['crime_data'] = {
-                'rape': district_data.get('rape', 0),
-                'kidnapping_and_abduction': district_data.get('kidnapping_and_abduction', 0),
-                'dowry_deaths': district_data.get('dowry_deaths', 0),
-                'assault_on_women': district_data.get('assault_on_women', 0),
-                'insult_to_modesty': district_data.get('insult_to_modesty', 0),
-                'cruelty_by_husband': district_data.get('cruelty_by_husband', 0),
-                'importation_of_girls': district_data.get('importation_of_girls', 0),
+                'rape': rape_cases,
+                'kidnapping_and_abduction': int(district_data.get('kidnapping_and_abduction', 0)),
+                'dowry_deaths': int(district_data.get('dowry_deaths', 0)),
+                'assault_on_women': int(district_data.get('assault_on_women', 0)),
+                'insult_to_modesty': int(district_data.get('insult_to_modesty', 0)),
+                'cruelty_by_husband': int(district_data.get('cruelty_by_husband', 0)),
+                'importation_of_girls': int(district_data.get('importation_of_girls', 0)),
             }
+
+            # Determine if the district is safe or unsafe
+            context['is_safe'] = rape_cases <= 10
 
     return render(request, 'map_visualization/map.html', context)
 
-
-# Function to get latitude and longitude using a geocoding API
 def fetch_lat_long(location):
-    # Replace with your geocoding API (e.g., OpenStreetMap or Google Maps API)
     url = f"https://nominatim.openstreetmap.org/search?q={location}&format=json"
-    response = requests.get(url)
-    if response.status_code == 200:
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
         data = response.json()
         if data:
             lat = data[0]['lat']
             lon = data[0]['lon']
             return lat, lon
-    return None, None  # Fallback if no lat/long found
+    except requests.RequestException as e:
+        print(f"Error fetching geocoding data: {e}")
+    return None, None
