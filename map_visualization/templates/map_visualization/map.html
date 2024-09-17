@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crime Map Visualization</title>
+
+    <!-- Include Leaflet.js CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    
+    <!-- Include Leaflet.js JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Crime Map Visualization</h1>
+
+    <!-- Form to select a district -->
+    <form method="GET" action="{% url 'crime_map' %}">
+        <label for="district">Select District:</label>
+        <select id="district" name="district">
+            <!-- Dynamically populate districts -->
+            {% for district in districts %}
+                <option value="{{ district }}" {% if selected_district == district %}selected{% endif %}>
+                    {{ district }}
+                </option>
+            {% endfor %}
+        </select>
+        <button type="submit">View District</button>
+    </form>
+
+    <!-- Display the map for the selected district -->
+    {% if lat and lon %}
+        <h2>Map for: {{ selected_district }}</h2>
+        <div id="map"></div>
+
+        <script>
+            var map = L.map('map').setView([{{ lat }}, {{ lon }}], 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: 'Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            L.marker([{{ lat }}, {{ lon }}]).addTo(map)
+                .bindPopup('<b>{{ selected_district }}</b><br>Crime Data for this district.')
+                .openPopup();
+        </script>
+    {% else %}
+        <p>No district selected or no latitude/longitude available.</p>
+    {% endif %}
+</body>
+</html>
